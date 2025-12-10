@@ -1,0 +1,7 @@
+.vagrant/
+*.log
+*.retry
+*.bak
+*~
+__pycache__/
+*.swp
