@@ -1,0 +1,47 @@
+---
+# Initialize swarm only on manager
+- name: Initialize Swarm on manager
+  shell: docker swarm init --advertise-addr {{ ansible_host }}
+  when: inventory_hostname in groups['manager']
+  register: swarm_init
+  changed_when: "'This node is already part of a swarm' not in swarm_init.stderr"
+  failed_when: false
+
+# Retrieve join token on manager
+- name: Get worker join token
+  shell: docker swarm join-token -q worker
+  when: inventory_hostname in groups['manager']
+  register: join_token_raw
+
+# Save token on MANAGER so other hosts can access it via hostvars
+- name: Store join token fact on manager
+  set_fact:
+    swarm_join_token: "{{ join_token_raw.stdout }}"
+  when: inventory_hostname in groups['manager']
+
+# Workers join the swarm
+- name: Workers join the swarm
+  shell: >
+    docker swarm join --token {{ hostvars[groups['manager'][0]].swarm_join_token }}
+    {{ hostvars[groups['manager'][0]].ansible_host }}:2377
+  when: inventory_hostname in groups['workers']
+  failed_when: false
+
+
+  # Deploy Portainer on Swarm manager
+- name: Deploy Portainer using Docker Swarm
+  tags: portainer
+  shell: |
+    docker service create \
+      --name portainer \
+      --publish 9000:9000 \
+      --publish 9443:9443 \
+      --constraint 'node.role==manager' \
+      --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
+      --mount type=bind,src=/opt/portainer,dst=/data \
+      portainer/portainer-ce:latest
+  when: inventory_hostname in groups['manager']
+  failed_when: false
+
+
+ 

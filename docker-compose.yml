@@ -1,0 +1,42 @@
+services:
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: peche_web
+    ports:
+      - "8083:80"
+    volumes:
+      - ./app:/var/www/html
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: mysql:8.0
+    container_name: peche_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: peche
+      MYSQL_USER: peche_user
+      MYSQL_PASSWORD: peche_pass
+    volumes:
+      - ./db_data:/var/lib/mysql
+      - ./peche.sql:/docker-entrypoint-initdb.d/peche.sql
+    ports:
+      - "3307:3306"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: peche_phpmyadmin
+    restart: always
+    ports:
+      - "8085:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+
+volumes:
+  db_data:
