@@ -1,0 +1,16 @@
+- name: Login to Harbor
+  become: yes
+  shell: echo "{{ harbor_password }}" | docker login {{ harbor_url }} -u {{ harbor_user }} --password-stdin
+
+# ----------------------------------------
+# Pull the latest image on ALL nodes
+# ----------------------------------------
+- name: Pull peche_app image
+  shell: docker pull {{ harbor_url }}/pecheimg/peche_app:{{ image_tag }}
+
+# ----------------------------------------
+# Deploy the application stack (MANAGER ONLY)
+# ----------------------------------------
+- name: Deploy Peche App Stack
+  when: inventory_hostname == groups['manager'][0]
+  shell: docker stack deploy -c /vagrant/peche-stack.yml peche_app

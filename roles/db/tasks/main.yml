@@ -1,10 +1,49 @@
 ---
+# 1) Installer MariaDB
 - name: Install MariaDB
   apt:
     name: mariadb-server
     update_cache: yes
     state: present
 
+# 2) Configurer MariaDB pour écouter sur toutes les interfaces
+- name: Configure MariaDB bind-address
+  lineinfile:
+    path: /etc/mysql/mariadb.conf.d/50-server.cnf
+    regexp: '^bind-address'
+    line: 'bind-address = 0.0.0.0'
+  notify: Restart MariaDB
+
+  # Installer dépendances Python pour MySQL
+- name: Install MySQL Python dependencies
+  apt:
+    name:
+      - python3-pymysql
+      - python3-mysql.connector
+    state: present
+    update_cache: yes
+
+
+# 3) Créer la base de données
+- name: Create database
+  mysql_db:
+    name: peche
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+
+# 4) Créer l'utilisateur avec accès réseau
+- name: Create MySQL user with remote access
+  mysql_user:
+    name: peche_user
+    password: peche_pwd
+    priv: "peche.*:ALL"
+    host: "%"
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+
+# 5) Assurer que MariaDB est activé + démarré
 - name: Enable and start MariaDB
   systemd:
     name: mariadb

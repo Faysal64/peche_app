@@ -7,11 +7,13 @@
 - hosts: manager
   become: yes
   roles:
+    - harbor_login
     - swarm
 
 - hosts: workers
   become: yes
   roles:
+    - harbor_login
     - swarm
 
 - hosts: db

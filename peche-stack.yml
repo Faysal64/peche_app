@@ -2,9 +2,14 @@ version: "3.9"
 
 services:
   web:
-    image: peche_app:latest        # IMPORTANT : doit être build + load sur tous les nodes
+    image: 192.168.56.11/pecheimg/peche_app:main-20251211-1557-a167bb1
     ports:
       - "8083:80"
+    environment:
+      - DB_HOST=192.168.56.14
+      - DB_NAME=peche
+      - DB_USER=peche_user
+      - DB_PASSWORD=peche_pwd
     deploy:
       replicas: 2
       placement:
@@ -14,45 +19,6 @@ services:
         condition: on-failure
     networks:
       - peche_net
-    depends_on:
-      - db
-
-  db:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: peche
-      MYSQL_USER: peche_user
-      MYSQL_PASSWORD: peche_pass
-    volumes:
-      - db_data:/var/lib/mysql
-      - peche_sql:/docker-entrypoint-initdb.d   # solution pour l'init SQL en swarm
-    ports:
-      - "3307:3306"
-    deploy:
-      placement:
-        constraints:
-          - node.role == manager
-    networks:
-      - peche_net
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    environment:
-      PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "8085:80"
-    deploy:
-      placement:
-        constraints:
-          - node.role == worker
-    networks:
-      - peche_net
-
-volumes:
-  db_data:
-  peche_sql:
 
 networks:
   peche_net:

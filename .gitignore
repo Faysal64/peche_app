@@ -1,8 +1,8 @@
 .vagrant/
+db_data/
 *.log
 *.retry
 *.bak
-*~
 __pycache__/
 *.swp
 peche.tar
